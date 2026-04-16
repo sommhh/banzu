@@ -1,6 +1,3 @@
-
-
-Meta AIに聞く...
 <!DOCTYPE html>
 <html lang="ja">
 <head>
@@ -194,6 +191,7 @@ Meta AIに聞く...
   }
 })();</script>
 <script>window.Intl=window.Intl||{};Intl.t=function(s){return(Intl._locale&&Intl._locale[s])||s;};</script>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>分電盤エディタ</title>
@@ -201,7 +199,7 @@ Meta AIに聞く...
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
 <style>
   html,body{font-family:"Noto Sans JP",system-ui,sans-serif;background:#f1f5f9}
-  @media print{@page{size:B5 landscape;margin:2mm}body{background:#fff}.no-print{display:none!important}#paper{padding:0!important;box-shadow:none!important}.screen-sched{display:none!important}#printList{display:block!important}#diagram{width:250mm!important;height:auto!important;margin:0 auto}h1{margin-bottom:1mm!important}}
+  @media print{@page{size:B5 landscape;margin:2mm}body{background:#fff}.no-print{display:none!important}#paper{padding:0!important;box-shadow:none!important}.screen-sched{display:none!important}#printList{display:block!important}#diagram{width:250mm!important;height:auto!important;margin:0 auto;max-width:100%}h1{margin-bottom:1mm!important}}
   .mono{font-family:"IBM Plex Mono",monospace}
   .sched-input{width:100%;background:transparent;outline:none;padding:2px 4px;border-radius:3px}
   .sched-input:focus{background:#fef3c7;box-shadow:inset 0 0 0 1px #f59e0b}
@@ -258,7 +256,7 @@ function renderDiagram(){
   sLine(leftX,mainY+42,leftX,busY);sLine(leftX,busY,leftX+26,busY,2.2);
   const busEnd=1160;sLine(leftX+26,busY,busEnd,busY,3);
   const startX=260,pitch=64,topY=busY-58,botY=busY+58;
-  state.circuits.forEach((c,i)=>{const col=Math.floor(i/2),isTop=i%2===0,x=startX+col*pitch,yB=isTop?topY:botY;
+  state.circuits.slice(0,30).forEach((c,i)=>{const col=Math.floor(i/2),isTop=i%2===0,x=startX+col*pitch,yB=isTop?topY:botY;
     sLine(x,busY,x,isTop?yB+14:yB-14);sRect(x-14,yB-14,28,28,2);sText(x,yB+4,c.amp+"A",11,700);
     const ny=isTop?yB-36:yB+36;if(c.voltage===100){sCircle(x,ny,10);sText(x,ny+4,c.no,11)}else{sCircle(x,ny,14);sCircle(x,ny,10);sText(x,ny+4,c.no,11)}
   });
@@ -267,31 +265,49 @@ function renderDiagram(){
 function renderSchedule(){
   const make=list=>{const w=document.createElement("div");const t=document.createElement("table");t.className="w-full text-[12px]";t.innerHTML=`<thead class="bg-slate-50"><tr class="border-b"><th class="w-11 py-1">No</th><th class="text-left py-1">回路名称</th><th class="w-24 py-1">電圧</th><th class="w-20 py-1">容量</th></tr></thead><tbody></tbody>`;const b=t.querySelector("tbody");
     list.forEach(c=>{const r=document.createElement("tr");r.className="border-b";r.innerHTML=`<td class="text-center mono">${c.no}</td><td><input data-no="${c.no}" data-k="name" class="sched-input" value="${c.name}"></td><td class="text-center"><button data-no="${c.no}" data-k="v100" class="btn-tab ${c.voltage===100?'active':''} mr-1">100V</button><button data-no="${c.no}" data-k="v200" class="btn-tab ${c.voltage===200?'active':''}">200V</button></td><td class="text-center"><button data-no="${c.no}" data-k="a20" class="btn-tab ${c.amp===20?'active':''} mr-1">20A</button><button data-no="${c.no}" data-k="a30" class="btn-tab ${c.amp===30?'active':''}">30A</button></td>`;b.appendChild(r)});w.appendChild(t);return w};
-  const h=Math.ceil(state.circuits.length/2);$("#schedLeft").innerHTML="";$("#schedRight").innerHTML="";$("#schedLeft").appendChild(make(state.circuits.slice(0,h)));$("#schedRight").appendChild(make(state.circuits.slice(h)));
-  document.querySelectorAll(".sched-input").forEach(i=>i.addEventListener("input",e=>{const c=state.circuits.find(x=>x.no==e.target.dataset.no);c.name=e.target.value}));
-  document.querySelectorAll("button[data-k]").forEach(b=>b.addEventListener("click",e=>{const c=state.circuits.find(x=>x.no==e.currentTarget.dataset.no),k=e.currentTarget.dataset.k;if(k==="v100")c.voltage=100;if(k==="v200")c.voltage=200;if(k==="a20")c.amp=20;if(k==="a30")c.amp=30;renderAll()}));
-}
+  const circuits = state.circuits.slice(0,30); const h=Math.ceil(circuits.length/2);$("#schedLeft").innerHTML="";$("#schedRight").innerHTML="";$("#schedLeft").appendChild(make(circuits.slice(0,h)));$("#schedRight").appendChild(make(circuits.slice(h)));}
 function renderAll(){
-  renderDiagram();renderSchedule();document.getElementById("docTitle").textContent = state.site || "";
+  renderDiagram();renderSchedule();document.getElementById("docTitle").textContent = state.site || "分電盤図";
   // print list
   const pl=document.getElementById("printList");
-  const half=Math.ceil(state.circuits.length/2);
+  const circuits = state.circuits.slice(0,30); const half=Math.ceil(circuits.length/2);
   let html='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:10px"><table style="width:100%;border-collapse:collapse"><thead><tr style="background:#f1f5f9"><th style="border:1px solid #000;padding:2px;width:24px">No</th><th style="border:1px solid #000;padding:2px">名称</th><th style="border:1px solid #000;padding:2px;width:36px">電圧</th><th style="border:1px solid #000;padding:2px;width:36px">容量</th></tr></thead><tbody>';
-  state.circuits.slice(0,half).forEach(c=>{html+=`<tr><td style="border:1px solid #000;text-align:center">${c.no}</td><td style="border:1px solid #000;padding:0 4px">${c.name}</td><td style="border:1px solid #000;text-align:center">${c.voltage}V</td><td style="border:1px solid #000;text-align:center">${c.amp}A</td></tr>`});
+  circuits.slice(0,half).forEach(c=>{html+=`<tr><td style="border:1px solid #000;text-align:center">${c.no}</td><td style="border:1px solid #000;padding:0 4px">${c.name}</td><td style="border:1px solid #000;text-align:center">${c.voltage}V</td><td style="border:1px solid #000;text-align:center">${c.amp}A</td></tr>`});
   html+='</tbody></table><table style="width:100%;border-collapse:collapse"><thead><tr style="background:#f1f5f9"><th style="border:1px solid #000;padding:2px;width:24px">No</th><th style="border:1px solid #000;padding:2px">名称</th><th style="border:1px solid #000;padding:2px;width:36px">電圧</th><th style="border:1px solid #000;padding:2px;width:36px">容量</th></tr></thead><tbody>';
-  state.circuits.slice(half).forEach(c=>{html+=`<tr><td style="border:1px solid #000;text-align:center">${c.no}</td><td style="border:1px solid #000;padding:0 4px">${c.name}</td><td style="border:1px solid #000;text-align:center">${c.voltage}V</td><td style="border:1px solid #000;text-align:center">${c.amp}A</td></tr>`});
+  circuits.slice(half).forEach(c=>{html+=`<tr><td style="border:1px solid #000;text-align:center">${c.no}</td><td style="border:1px solid #000;padding:0 4px">${c.name}</td><td style="border:1px solid #000;text-align:center">${c.voltage}V</td><td style="border:1px solid #000;text-align:center">${c.amp}A</td></tr>`});
   html+='</tbody></table></div>';
   pl.innerHTML=html;
 }
-$("#inlet").onchange=e=>{state.inlet=e.target.value;renderDiagram()};
-$("#mainType").onchange=e=>{state.mainType=e.target.value;renderDiagram()};
-$("#mainAmp").onchange=e=>{state.mainAmp=e.target.value;renderDiagram()};
-$("#tglSwitch").onclick=e=>{state.hasSwitch=!state.hasSwitch;e.currentTarget.classList.toggle("active",state.hasSwitch);e.currentTarget.textContent=state.hasSwitch?"あり":"なし";renderDiagram()};
-$("#plus2").onclick=()=>{if(state.circuits.length<30){initCircuits(state.circuits.length+2);renderAll()}};
-$("#minus2").onclick=()=>{if(state.circuits.length>4){initCircuits(state.circuits.length-2);renderAll()}};
+$("#inlet").onchange=e=>{state.inlet=e.target.value;renderAll()};
+$("#mainType").onchange=e=>{state.mainType=e.target.value;renderAll()};
+$("#mainAmp").onchange=e=>{state.mainAmp=e.target.value;renderAll()};
+$("#tglSwitch").onclick=e=>{state.hasSwitch=!state.hasSwitch;e.currentTarget.classList.toggle("active",state.hasSwitch);e.currentTarget.textContent=state.hasSwitch?"あり":"なし";renderAll()};
+$("#plus2").onclick=()=>{resizeCircuits(state.circuits.length+2);renderAll()};
+$("#minus2").onclick=()=>{resizeCircuits(state.circuits.length-2);renderAll()};
 $("#reset").onclick=()=>{initCircuits(16);renderAll()};
 $("#print").onclick=()=>window.print();
-$("#siteName").oninput=e=>{state.site=e.target.value;renderAll()};
+$("#siteName").oninput=e=>{state.site=e.target.value;document.getElementById("docTitle").textContent = state.site || "分電盤図"};
+
+// イベント委譲（バグ③対策）
+document.addEventListener('input', e=>{
+  if(e.target.classList.contains('sched-input')){
+    const c = state.circuits.find(x=>x.no==e.target.dataset.no);
+    if(c){ c.name = e.target.value; }
+  }
+});
+document.addEventListener('click', e=>{
+  const btn = e.target.closest('button[data-k]');
+  if(!btn) return;
+  const c = state.circuits.find(x=>x.no==btn.dataset.no);
+  if(!c) return;
+  const k = btn.dataset.k;
+  if(k==="v100") c.voltage=100;
+  if(k==="v200") c.voltage=200;
+  if(k==="a20") c.amp=20;
+  if(k==="a30") c.amp=30;
+  renderAll();
+});
+
 initCircuits(16);renderAll();
 </script>
 </body>
